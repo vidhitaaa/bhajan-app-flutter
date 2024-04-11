@@ -17,7 +17,6 @@ class MyHomepage extends StatefulWidget {
 
 class _MyHomepageState extends State<MyHomepage> {
   final _player = AudioPlayer();
-  Bhajandetails? bhajanDetails;
 
   @override
   void initState() {
@@ -27,15 +26,14 @@ class _MyHomepageState extends State<MyHomepage> {
     // _setupAudioPlayer(widget.index);
   }
 
-  Future<void> _fetchBhajanDetails() async {
+  Future<Bhajandetails?> _fetchBhajanDetails() async {
     try {
       var client = http.Client();
       var service = RemoteServicedetails(client);
-      bhajanDetails = await service.getBhajansdetails(widget.slug);
-      print(bhajanDetails);
-      setState(() {}); // Call setState to update the UI with the fetched data
+      return await service.getBhajansdetails(widget.slug);
     } catch (e) {
       print("Error fetching bhajan details: $e");
+      return null;
     }
   }
 
@@ -89,76 +87,98 @@ class _MyHomepageState extends State<MyHomepage> {
           color: Colors.black.withOpacity(0.05),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              GFListTile(
-                avatar: Image.asset(
-                  bhajanDetails!.coverPhoto, // Adjust this line
-                  width: 120,
-                  height: 120,
-                ),
-                title: Text(
-                  bhajanDetails!.titleHindi,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Color(0xFF390000),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subTitle: Text(
-                  bhajanDetails!.titleEnglish,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Color(0xFF390000),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: PageView(
-                    children: [
-                      Center(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: bhajanDetails!.lyricsHindi
-                                .split('\n')
-                                .map((line) => Text(
-                                      line,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        color: Color(0xFF390000),
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
+          child: FutureBuilder<Bhajandetails?>(
+            future: _fetchBhajanDetails(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error: ${snapshot.error}'),
+                );
+              } else if (snapshot.hasData && snapshot.data != null) {
+                Bhajandetails bhajanDetails = snapshot.data!;
+                return ListView(
+                  children: [
+                    GFListTile(
+                      avatar: Image.asset(
+                        bhajanDetails.coverPhoto, // Adjust this line
+                        width: 120,
+                        height: 120,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(Icons.error);
+                        },
+                      ),
+                      title: Text(
+                        bhajanDetails.titleHindi,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Color(0xFF390000),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Center(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: bhajanDetails!.lyricsEnglish
-                                .split('\n')
-                                .map((line) => Text(
-                                      line,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        color: Color(0xFF390000),
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
+                      subTitle: Text(
+                        bhajanDetails.titleEnglish,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Color(0xFF390000),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              // _progessBar(),
-              // _playbackControlButton(),
-            ],
+                    ),
+                    SizedBox.fromSize(
+                      size: Size(MediaQuery.of(context).size.width, 500),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: PageView(
+                          children: [
+                            Center(
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: bhajanDetails.lyricsHindi
+                                      .split('\n')
+                                      .map((line) => Text(
+                                            line,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              color: Color(0xFF390000),
+                                            ),
+                                          ))
+                                      .toList(),
+                                ),
+                              ),
+                            ),
+                            Center(
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: bhajanDetails.lyricsEnglish
+                                      .split('\n')
+                                      .map((line) => Text(
+                                            line,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              color: Color(0xFF390000),
+                                            ),
+                                          ))
+                                      .toList(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // _progessBar(),
+                    // _playbackControlButton(),
+                  ],
+                );
+              }
+              return const SizedBox();
+            },
           ),
         ),
       ),
