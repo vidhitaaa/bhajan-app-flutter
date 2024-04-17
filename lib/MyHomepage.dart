@@ -17,50 +17,49 @@ class MyHomepage extends StatefulWidget {
 
 class _MyHomepageState extends State<MyHomepage> {
   final _player = AudioPlayer();
+  late Bhajandetails _bhajanDetails; // Change to late initialization
 
   @override
   void initState() {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized();
     _fetchBhajanDetails();
-    // _setupAudioPlayer(widget.index);
   }
 
   Future<Bhajandetails?> _fetchBhajanDetails() async {
     try {
       var client = http.Client();
       var service = RemoteServicedetails(client);
-      return await service.getBhajansdetails(widget.slug);
+      Bhajandetails? details = await service.getBhajansdetails(widget.slug);
+      if (details != null) {
+        setState(() {
+          _bhajanDetails = details;
+        });
+        _setupAudioPlayer(_bhajanDetails.audioUrl); // Pass audio link here
+      } else {
+        // Handle case when Bhajan details are not available
+      }
+      return details;
     } catch (e) {
       print("Error fetching bhajan details: $e");
+      // Handle error gracefully
       return null;
     }
   }
 
-  // var audiolinks = [
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/1.aac?alt=media&token=37d17805-fdc0-4568-b1bf-aa2bc72d0629',
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/2.aac?alt=media&token=d46e6d5a-4523-4faf-b494-e49c05bc6dd5',
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/3.aac?alt=media&token=0e39c16b-35b8-4055-ab74-3c9592150e0c',
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/4.aac?alt=media&token=0b9b370e-50ab-4a5c-bc47-9f27afa801da',
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/5.aac?alt=media&token=91b27a73-aca5-4cae-97ac-a3eb3b50dc9e',
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/6.aac?alt=media&token=3eb89e92-ae7f-4ac8-9655-2739f1e308f8',
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/7.aac?alt=media&token=4bebe514-2a1f-4047-9a7b-ffb0967ad802',
-  //   'https://firebasestorage.googleapis.com/v0/b/darbar-v2.appspot.com/o/8.aac?alt=media&token=2d06130a-7be1-4b01-bbda-9751d7610507'
-  // ];
+  Future<void> _setupAudioPlayer(String link) async {
+    _player.playbackEventStream.listen((event) {},
+        onError: (Object e, StackTrace stacktrace) {
+      print("A stream error occurred: $e");
+    });
 
-  // Future<void> _setupAudioPlayer(int index) async {
-  //   String link = audiolinks[index];
-  //   _player.playbackEventStream.listen((event) {},
-  //       onError: (Object e, StackTrace stacktrace) {
-  //     print("A stream error occurred: $e");
-  //   });
-
-  //   try {
-  //     await _player.setAudioSource(AudioSource.uri(Uri.parse(link)));
-  //   } catch (e) {
-  //     print("Error loading audio source: $e");
-  //   }
-  // }
+    try {
+      await _player.setAudioSource(AudioSource.uri(Uri.parse(link)));
+    } catch (e) {
+      print("Error loading audio source: $e");
+      // Handle error gracefully
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,9 +172,8 @@ class _MyHomepageState extends State<MyHomepage> {
                         ),
                       ),
                     ),
-
-                    // _progessBar(),
-                    // _playbackControlButton(),
+                    _progessBar(),
+                    _playbackControlButton(),
                   ],
                 );
               }
