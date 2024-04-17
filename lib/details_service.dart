@@ -8,7 +8,7 @@ class RemoteServicedetails {
 
   Future<Bhajandetails> getBhajansdetails(String slug) async {
     try {
-      var uri = Uri.parse('http://127.0.0.1:8000/bhajans/$slug');
+      var uri = Uri.parse('http://127.0.0.1:8000/bhajans/$slug/');
       var response = await _client.get(uri);
 
       if (response.statusCode == 200) {

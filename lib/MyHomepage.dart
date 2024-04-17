@@ -103,14 +103,16 @@ class _MyHomepageState extends State<MyHomepage> {
                 return ListView(
                   children: [
                     GFListTile(
-                      avatar: Image.asset(
-                        bhajanDetails.coverPhoto, // Adjust this line
-                        width: 120,
-                        height: 120,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(Icons.error);
-                        },
-                      ),
+                      avatar: bhajanDetails.coverPhoto.isNotEmpty
+                          ? Image.network(
+                              "http://127.0.0.1:8000${bhajanDetails.coverPhoto}", // Use the URL fetched from the API
+                              width: 120,
+                              height: 120,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(Icons.error);
+                              },
+                            )
+                          : Icon(Icons.error),
                       title: Text(
                         bhajanDetails.titleHindi,
                         style: const TextStyle(

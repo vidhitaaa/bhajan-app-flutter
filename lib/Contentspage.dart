@@ -174,10 +174,13 @@ class _ContentsPageState extends State<Contentspage> {
                             padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
                             child: Row(
                               children: [
-                                Image(
-                                  image: AssetImage('images/${index + 1}.webp'),
+                                Image.network(
+                                  "http://127.0.0.1:8000${bhajans[index].coverPhoto}", // Use the URL fetched from the API
                                   width: 120,
                                   height: 120,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(Icons.error);
+                                  },
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
