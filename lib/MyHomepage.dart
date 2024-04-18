@@ -2,11 +2,9 @@ import 'package:bhajan_app_flutter/details_service.dart';
 import 'package:bhajan_app_flutter/models/bhajan_details.dart';
 import 'package:flutter/material.dart';
 import 'package:getwidget/components/list_tile/gf_list_tile.dart';
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:just_audio/just_audio.dart';
-import '../env.sample.dart';
-import '../models/bhajan.dart';
 import 'package:http/http.dart' as http;
+import 'page_manager.dart';
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 
 class MyHomepage extends StatefulWidget {
   final String slug;
@@ -16,14 +14,13 @@ class MyHomepage extends StatefulWidget {
 }
 
 class _MyHomepageState extends State<MyHomepage> {
-  final _player = AudioPlayer();
-
+  late final PageManager _pageManager;
+  late Future<Bhajandetails?> _bhajanDetailsFuture;
   @override
   void initState() {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized();
-    _fetchBhajanDetails();
-    // _setupAudioPlayer(widget.index);
+    _bhajanDetailsFuture = _fetchBhajanDetails();
   }
 
   Future<Bhajandetails?> _fetchBhajanDetails() async {
@@ -35,6 +32,12 @@ class _MyHomepageState extends State<MyHomepage> {
       print("Error fetching bhajan details: $e");
       return null;
     }
+  }
+
+  @override
+  void dispose() {
+    _pageManager.dispose();
+    super.dispose();
   }
 
   @override
@@ -63,7 +66,7 @@ class _MyHomepageState extends State<MyHomepage> {
         ),
         child: SafeArea(
           child: FutureBuilder<Bhajandetails?>(
-            future: _fetchBhajanDetails(),
+            future: _bhajanDetailsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
@@ -75,11 +78,12 @@ class _MyHomepageState extends State<MyHomepage> {
                 );
               } else if (snapshot.hasData && snapshot.data != null) {
                 Bhajandetails bhajanDetails = snapshot.data!;
+                _pageManager = PageManager(bhajanDetails.audioUrl);
                 return ListView(
                   children: [
                     GFListTile(
                       avatar: Image.network(
-                        "http://127.0.0.1:8000${bhajanDetails.coverPhoto}", // Use the URL fetched from the API
+                        "http://127.0.0.1:8000${bhajanDetails.coverPhoto}",
                         width: 120,
                         height: 120,
                         errorBuilder: (context, error, stackTrace) {
@@ -102,53 +106,90 @@ class _MyHomepageState extends State<MyHomepage> {
                         ),
                       ),
                     ),
-                    SizedBox.fromSize(
-                      size: Size(MediaQuery.of(context).size.width, 500),
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: PageView(
-                          children: [
-                            Center(
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  children: bhajanDetails.lyricsHindi
-                                      .split('\n')
-                                      .map((line) => Text(
-                                            line,
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              color: Color(0xFF390000),
-                                            ),
-                                          ))
-                                      .toList(),
-                                ),
+                    Container(
+                      height: 300, // Adjust the height as needed
+                      child: PageView(
+                        children: [
+                          Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: bhajanDetails.lyricsHindi
+                                    .split('\n')
+                                    .map((line) => Text(
+                                          line,
+                                          style: const TextStyle(
+                                            fontSize: 25,
+                                            color: Color(0xFF390000),
+                                          ),
+                                        ))
+                                    .toList(),
                               ),
                             ),
-                            Center(
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  children: bhajanDetails.lyricsEnglish
-                                      .split('\n')
-                                      .map((line) => Text(
-                                            line,
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              color: Color(0xFF390000),
-                                            ),
-                                          ))
-                                      .toList(),
-                                ),
+                          ),
+                          Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: bhajanDetails.lyricsEnglish
+                                    .split('\n')
+                                    .map((line) => Text(
+                                          line,
+                                          style: const TextStyle(
+                                            fontSize: 25,
+                                            color: Color(0xFF390000),
+                                          ),
+                                        ))
+                                    .toList(),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-
-                    // _progessBar(),
-                    // _playbackControlButton(),
+                    const SizedBox(
+                        height:
+                            20), // Add spacing between the PageView and ProgressBar
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 30),
+                      child: ValueListenableBuilder<ProgressBarState>(
+                        valueListenable: _pageManager.progressNotifier,
+                        builder: (_, value, __) {
+                          return ProgressBar(
+                            onSeek: _pageManager.seek,
+                            progress: value.current,
+                            buffered: value.buffered,
+                            total: value.total,
+                          );
+                        },
+                      ),
+                    ),
+                    ValueListenableBuilder<ButtonState>(
+                      valueListenable: _pageManager.buttonNotifier,
+                      builder: (_, value, __) {
+                        switch (value) {
+                          case ButtonState.loading:
+                            return Container(
+                              margin: const EdgeInsets.all(8.0),
+                              width: 32.0,
+                              height: 32.0,
+                              child: const CircularProgressIndicator(),
+                            );
+                          case ButtonState.paused:
+                            return IconButton(
+                              icon: const Icon(Icons.play_arrow),
+                              iconSize: 32.0,
+                              onPressed: _pageManager.play,
+                            );
+                          case ButtonState.playing:
+                            return IconButton(
+                              icon: const Icon(Icons.pause),
+                              iconSize: 32.0,
+                              onPressed: _pageManager.pause,
+                            );
+                        }
+                      },
+                    ),
                   ],
                 );
               }
@@ -171,66 +212,6 @@ class _MyHomepageState extends State<MyHomepage> {
         backgroundColor: const Color(0xFF390000),
         selectedItemColor: const Color(0xFFFFEDCB),
       ),
-    );
-  }
-
-  Widget _progessBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 16.0), // Adjust the padding as needed
-      child: StreamBuilder<Duration?>(
-        stream: _player.positionStream,
-        builder: (context, snapshot) {
-          return ProgressBar(
-            progress: snapshot.data ?? Duration.zero,
-            buffered: _player.bufferedPosition,
-            total: _player.duration ?? Duration.zero,
-            onSeek: (duration) {
-              _player.seek(duration);
-            },
-            timeLabelTextStyle: TextStyle(
-              color: const Color(0xFF390000),
-            ),
-            thumbColor: const Color(0xFF390000),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _playbackControlButton() {
-    return StreamBuilder<PlayerState>(
-      stream: _player.playerStateStream,
-      builder: (context, snapshot) {
-        final processingState = snapshot.data?.processingState;
-        final playing = snapshot.data?.playing;
-        if (processingState == ProcessingState.loading ||
-            processingState == ProcessingState.buffering) {
-          return Container(
-            margin: const EdgeInsets.all(8.0),
-            width: 64,
-            height: 64,
-            child: const CircularProgressIndicator(),
-          );
-        } else if (playing != true) {
-          return IconButton(
-            icon: const Icon(Icons.play_arrow),
-            iconSize: 64,
-            onPressed: _player.play,
-          );
-        } else if (processingState != ProcessingState.completed) {
-          return IconButton(
-            icon: const Icon(Icons.pause),
-            iconSize: 64,
-            onPressed: _player.pause,
-          );
-        } else {
-          return IconButton(
-              icon: const Icon(Icons.replay),
-              iconSize: 64,
-              onPressed: () => _player.seek(Duration.zero));
-        }
-      },
     );
   }
 }
