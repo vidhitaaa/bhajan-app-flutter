@@ -17,47 +17,23 @@ class MyHomepage extends StatefulWidget {
 
 class _MyHomepageState extends State<MyHomepage> {
   final _player = AudioPlayer();
-  late Bhajandetails _bhajanDetails; // Change to late initialization
 
   @override
   void initState() {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized();
     _fetchBhajanDetails();
+    // _setupAudioPlayer(widget.index);
   }
 
   Future<Bhajandetails?> _fetchBhajanDetails() async {
     try {
       var client = http.Client();
       var service = RemoteServicedetails(client);
-      Bhajandetails? details = await service.getBhajansdetails(widget.slug);
-      if (details != null) {
-        setState(() {
-          _bhajanDetails = details;
-        });
-        _setupAudioPlayer(_bhajanDetails.audioUrl); // Pass audio link here
-      } else {
-        // Handle case when Bhajan details are not available
-      }
-      return details;
+      return await service.getBhajansdetails(widget.slug);
     } catch (e) {
       print("Error fetching bhajan details: $e");
-      // Handle error gracefully
       return null;
-    }
-  }
-
-  Future<void> _setupAudioPlayer(String link) async {
-    _player.playbackEventStream.listen((event) {},
-        onError: (Object e, StackTrace stacktrace) {
-      print("A stream error occurred: $e");
-    });
-
-    try {
-      await _player.setAudioSource(AudioSource.uri(Uri.parse(link)));
-    } catch (e) {
-      print("Error loading audio source: $e");
-      // Handle error gracefully
     }
   }
 
@@ -102,16 +78,14 @@ class _MyHomepageState extends State<MyHomepage> {
                 return ListView(
                   children: [
                     GFListTile(
-                      avatar: bhajanDetails.coverPhoto.isNotEmpty
-                          ? Image.network(
-                              "http://127.0.0.1:8000${bhajanDetails.coverPhoto}", // Use the URL fetched from the API
-                              width: 120,
-                              height: 120,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Icon(Icons.error);
-                              },
-                            )
-                          : Icon(Icons.error),
+                      avatar: Image.network(
+                        "http://127.0.0.1:8000${bhajanDetails.coverPhoto}", // Use the URL fetched from the API
+                        width: 120,
+                        height: 120,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(Icons.error);
+                        },
+                      ),
                       title: Text(
                         bhajanDetails.titleHindi,
                         style: const TextStyle(
@@ -172,8 +146,9 @@ class _MyHomepageState extends State<MyHomepage> {
                         ),
                       ),
                     ),
-                    _progessBar(),
-                    _playbackControlButton(),
+
+                    // _progessBar(),
+                    // _playbackControlButton(),
                   ],
                 );
               }
