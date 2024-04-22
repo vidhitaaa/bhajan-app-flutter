@@ -5,6 +5,7 @@ import 'package:getwidget/components/list_tile/gf_list_tile.dart';
 import 'package:http/http.dart' as http;
 import 'page_manager.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'appConstants.dart';
 
 class MyHomepage extends StatefulWidget {
   final String slug;
@@ -83,7 +84,7 @@ class _MyHomepageState extends State<MyHomepage> {
                   children: [
                     GFListTile(
                       avatar: Image.network(
-                        "http://127.0.0.1:8000${bhajanDetails.coverPhoto}",
+                        "$root${bhajanDetails.coverPhoto}",
                         width: 120,
                         height: 120,
                         errorBuilder: (context, error, stackTrace) {

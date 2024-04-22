@@ -1,5 +1,6 @@
 import '../models/bhajan.dart';
 import 'package:http/http.dart' as http;
+import 'appConstants.dart';
 
 class RemoteService {
   final http.Client _client;
@@ -8,7 +9,7 @@ class RemoteService {
 
   Future<List<Bhajan>> getBhajans(int page) async {
     try {
-      var uri = Uri.parse('http://127.0.0.1:8000/bhajans/?page=$page');
+      var uri = Uri.parse('$root/bhajans/?page=$page');
       var response = await _client.get(uri);
 
       if (response.statusCode == 200) {

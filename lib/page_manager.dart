@@ -1,3 +1,4 @@
+import 'package:bhajan_app_flutter/appConstants.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -19,7 +20,7 @@ class PageManager {
 
   void _init() async {
     _audioPlayer = AudioPlayer();
-    await _audioPlayer.setUrl('http://127.0.0.1:8000/${audioUrl}');
+    await _audioPlayer.setUrl('$root/$audioUrl');
 
     _audioPlayer.playerStateStream.listen((playerState) {
       final isPlaying = playerState.playing;

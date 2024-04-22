@@ -4,6 +4,7 @@ import 'package:http/http.dart';
 import '../env.sample.dart';
 import '../models/bhajan.dart';
 import 'package:http/http.dart' as http;
+import 'appConstants.dart';
 //import 'package:getwidget/getwidget.dart';
 
 class Contentspage extends StatefulWidget {
@@ -175,7 +176,9 @@ class _ContentsPageState extends State<Contentspage> {
                             child: Row(
                               children: [
                                 Image.network(
-                                  "http://127.0.0.1:8000${bhajans[index].coverPhoto}", // Use the URL fetched from the API
+                                  root +
+                                      bhajans[index]
+                                          .coverPhoto, // Use the URL fetched from the API
                                   width: 120,
                                   height: 120,
                                   errorBuilder: (context, error, stackTrace) {
