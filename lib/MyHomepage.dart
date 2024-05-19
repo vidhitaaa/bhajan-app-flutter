@@ -1,4 +1,5 @@
 import 'package:bhajan_app_flutter/details_service.dart';
+import 'package:bhajan_app_flutter/env.sample.dart';
 import 'package:bhajan_app_flutter/models/bhajan_details.dart';
 import 'package:flutter/material.dart';
 import 'package:getwidget/components/list_tile/gf_list_tile.dart';
@@ -6,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'page_manager.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'appConstants.dart';
+import 'search_modal.dart';
 
 class MyHomepage extends StatefulWidget {
   final String slug;
@@ -91,24 +93,38 @@ class _MyHomepageState extends State<MyHomepage> {
                           return Icon(Icons.error);
                         },
                       ),
-                      title: Text(
-                        bhajanDetails.titleHindi,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          color: Color(0xFF390000),
-                          fontWeight: FontWeight.bold,
-                        ),
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment
+                            .start, // Aligns text to the start
+                        children: [
+                          Text(
+                            bhajanDetails.sequenceNo.toString(),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              color: Color(0xFF390000),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            bhajanDetails.titleHindi,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF390000),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                       subTitle: Text(
                         bhajanDetails.titleEnglish,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 16,
                           color: Color(0xFF390000),
                         ),
                       ),
                     ),
                     Container(
-                      height: 300, // Adjust the height as needed
+                      height: 350, // Adjust the height as needed
                       child: PageView(
                         children: [
                           Center(
@@ -119,6 +135,7 @@ class _MyHomepageState extends State<MyHomepage> {
                                     .split('\n')
                                     .map((line) => Text(
                                           line,
+                                          textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             fontSize: 25,
                                             color: Color(0xFF390000),
@@ -136,6 +153,7 @@ class _MyHomepageState extends State<MyHomepage> {
                                     .split('\n')
                                     .map((line) => Text(
                                           line,
+                                          textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             fontSize: 25,
                                             color: Color(0xFF390000),
@@ -150,7 +168,7 @@ class _MyHomepageState extends State<MyHomepage> {
                     ),
                     const SizedBox(
                         height:
-                            20), // Add spacing between the PageView and ProgressBar
+                            40), // Add spacing between the PageView and ProgressBar
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 30),
                       child: ValueListenableBuilder<ProgressBarState>(
@@ -212,6 +230,38 @@ class _MyHomepageState extends State<MyHomepage> {
         ],
         backgroundColor: const Color(0xFF390000),
         selectedItemColor: const Color(0xFFFFEDCB),
+        onTap: (int index) {
+          if (index == 0) {
+            // Open search modal
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return SearchModal(
+                  onOkPressed: (int enteredNumber) async {
+                    print('Entered number: $enteredNumber');
+                    // Call findBhajan function here
+                    try {
+                      String slug = await RemoteService(http.Client())
+                          .findBhajan(enteredNumber);
+                      // Navigate to MyHomepage with the found slug
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyHomepage(slug: slug),
+                        ),
+                      );
+                    } catch (error) {
+                      print('Error finding Bhajan: $error');
+                      // Handle error, e.g., show an error message
+                    }
+                  },
+                );
+              },
+            );
+          } else {
+            // Navigate to home page or perform any other action
+          }
+        },
       ),
     );
   }
