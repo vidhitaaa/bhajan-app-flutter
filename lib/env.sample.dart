@@ -24,4 +24,38 @@ class RemoteService {
       throw e; // Rethrow the exception for handling in UI or wherever this function is called
     }
   }
+
+  Future<String> findBhajan(int sequenceNumber) async {
+    try {
+      for (int page = 1; page <= 10; page++) {
+        var uri = Uri.parse('$root/bhajans/?page=$page');
+        var response = await _client.get(uri);
+
+        if (response.statusCode == 200) {
+          var json = response.body;
+          var bhajans = bhajanFromJson(json);
+          var foundBhajan = bhajans.firstWhere(
+            (bhajan) => bhajan.sequenceNo == sequenceNumber,
+            orElse: () => Bhajan(
+                titleEnglish: "",
+                titleHindi: "",
+                sequenceNo: 0,
+                slug: "",
+                coverPhoto: ""),
+          );
+
+          if (foundBhajan.sequenceNo != 0) {
+            return foundBhajan.slug;
+          }
+        } else {
+          throw Exception('Failed to load data: ${response.statusCode}');
+        }
+      }
+
+      throw Exception('Bhajan with sequence number $sequenceNumber not found.');
+    } catch (e) {
+      print('Error: $e');
+      throw e; // Rethrow the exception for handling in UI or wherever this function is called
+    }
+  }
 }

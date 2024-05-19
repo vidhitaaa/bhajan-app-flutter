@@ -9,12 +9,14 @@ String bhajanToJson(List<Bhajan> data) =>
 class Bhajan {
   String titleHindi;
   String titleEnglish;
+  int sequenceNo;
   String slug;
   String coverPhoto;
 
   Bhajan({
     required this.titleHindi,
     required this.titleEnglish,
+    required this.sequenceNo,
     required this.slug,
     required this.coverPhoto,
   });
@@ -22,6 +24,7 @@ class Bhajan {
   factory Bhajan.fromJson(Map<String, dynamic> json) => Bhajan(
         titleHindi: json["title_hindi"],
         titleEnglish: json["title_english"],
+        sequenceNo: json["sequence_no"],
         slug: json["slug"],
         coverPhoto: json["cover_photo"],
       );
@@ -29,6 +32,7 @@ class Bhajan {
   Map<String, dynamic> toJson() => {
         "title_hindi": titleHindi,
         "title_english": titleEnglish,
+        "sequence_no": sequenceNo,
         "slug": slug,
         "cover_photo": coverPhoto,
       };

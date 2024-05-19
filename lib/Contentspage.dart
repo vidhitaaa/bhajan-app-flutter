@@ -1,4 +1,5 @@
 import 'package:bhajan_app_flutter/MyHomepage.dart';
+import 'search_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import '../env.sample.dart';
@@ -130,7 +131,6 @@ class _ContentsPageState extends State<Contentspage> {
               colorFilter: ColorFilter.mode(
                   Colors.black.withOpacity(0.05), BlendMode.dstATop),
             ),
-            color: Colors.black.withOpacity(0.05),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,13 +153,10 @@ class _ContentsPageState extends State<Contentspage> {
                   itemBuilder: (context, index) {
                     if (index < bhajans.length) {
                       return Card(
+                        color: Color(0x80FFEDCB),
                         elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
-                          side: const BorderSide(
-                            color: Color(0xFF390000),
-                            width: 1,
-                          ),
                         ),
                         child: InkWell(
                           onTap: () {
@@ -175,15 +172,18 @@ class _ContentsPageState extends State<Contentspage> {
                             padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
                             child: Row(
                               children: [
-                                Image.network(
-                                  root +
-                                      bhajans[index]
-                                          .coverPhoto, // Use the URL fetched from the API
-                                  width: 120,
-                                  height: 120,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.error);
-                                  },
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    root +
+                                        bhajans[index]
+                                            .coverPhoto, // Use the URL fetched from the API
+                                    width: 120,
+                                    height: 120,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(Icons.error);
+                                    },
+                                  ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
@@ -194,7 +194,7 @@ class _ContentsPageState extends State<Contentspage> {
                                       Text(
                                         bhajans![index].titleHindi,
                                         style: const TextStyle(
-                                          fontSize: 20,
+                                          fontSize: 17,
                                           color: Color(0xFF390000),
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -203,7 +203,7 @@ class _ContentsPageState extends State<Contentspage> {
                                       Text(
                                         bhajans![index].titleEnglish,
                                         style: const TextStyle(
-                                          fontSize: 20,
+                                          fontSize: 17,
                                           color: Color(0xFF390000),
                                         ),
                                       ),
@@ -244,6 +244,38 @@ class _ContentsPageState extends State<Contentspage> {
         ],
         backgroundColor: const Color(0xFF390000),
         selectedItemColor: const Color(0xFFFFEDCB),
+        onTap: (int index) {
+          if (index == 0) {
+            // Open search modal
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return SearchModal(
+                  onOkPressed: (int enteredNumber) async {
+                    print('Entered number: $enteredNumber');
+                    // Call findBhajan function here
+                    try {
+                      String slug = await RemoteService(http.Client())
+                          .findBhajan(enteredNumber);
+                      // Navigate to MyHomepage with the found slug
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyHomepage(slug: slug),
+                        ),
+                      );
+                    } catch (error) {
+                      print('Error finding Bhajan: $error');
+                      // Handle error, e.g., show an error message
+                    }
+                  },
+                );
+              },
+            );
+          } else {
+            // Navigate to home page or perform any other action
+          }
+        },
       ),
     );
   }
