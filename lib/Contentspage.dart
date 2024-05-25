@@ -110,6 +110,23 @@ class _ContentsPageState extends State<Contentspage> {
     }
   }
 
+  Future<void> _search(int enteredNumber) async {
+    try {
+      String slug =
+          await RemoteService(http.Client()).findBhajan(enteredNumber);
+      // Navigate to MyHomepage with the found slug
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MyHomepage(slug: slug),
+        ),
+      );
+    } catch (error) {
+      print('Error finding Bhajan: $error');
+      // Handle error, e.g., show an error message
+    }
+  }
+
   @override
   void dispose() {
     // Dispose of the ScrollController when the widget is disposed
@@ -268,23 +285,10 @@ class _ContentsPageState extends State<Contentspage> {
               context: context,
               builder: (BuildContext context) {
                 return SearchModal(
-                  onOkPressed: (int enteredNumber) async {
+                  onOkPressed: (int enteredNumber) {
                     print('Entered number: $enteredNumber');
-                    // Call findBhajan function here
-                    try {
-                      String slug = await RemoteService(http.Client())
-                          .findBhajan(enteredNumber);
-                      // Navigate to MyHomepage with the found slug
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MyHomepage(slug: slug),
-                        ),
-                      );
-                    } catch (error) {
-                      print('Error finding Bhajan: $error');
-                      // Handle error, e.g., show an error message
-                    }
+                    // Call search function to find the Bhajan
+                    _search(enteredNumber);
                   },
                 );
               },
