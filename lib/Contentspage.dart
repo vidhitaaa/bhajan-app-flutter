@@ -20,8 +20,8 @@ class _ContentsPageState extends State<Contentspage> {
   var isLoaded = false;
   var isLoading = false;
   int currentPage = 1;
-  bool hasMore = false;
-
+  bool hasMore = true;
+  Set<int> loadedBhajanIds = Set<int>();
   late ScrollController _scrollController;
 
   @override
@@ -44,34 +44,28 @@ class _ContentsPageState extends State<Contentspage> {
     });
   }
 
-  _loadMoreData() async {
-    if (!isLoading) {
+  Future<void> _loadMoreData() async {
+    if (!isLoading && hasMore) {
       setState(() {
         isLoading = true;
       });
 
-      // Fetch data for the next page
       try {
         List<Bhajan>? data = await getData(currentPage + 1);
-        print(data);
-        if (data != null && (currentPage + 1) < 10) {
+        if (data != null && data.isNotEmpty) {
           setState(() {
-            bhajans.addAll(data);
             currentPage = currentPage + 1;
             isLoading = false;
-            hasMore = true;
+            hasMore = data.length > 0; // Continue if there's more data
           });
         } else {
-          // Handle error,
-          //e.g., show an error message to the user
-
           setState(() {
-            isLoading = true;
+            isLoading = false;
+            hasMore = false; // Stop if no more data
           });
         }
       } catch (error) {
         print('Error loading more data: $error');
-        // Handle error, e.g., show an error message to the user
         setState(() {
           isLoading = false;
         });
@@ -87,14 +81,27 @@ class _ContentsPageState extends State<Contentspage> {
       List<Bhajan>? newBhajans = await remoteService.getBhajans(page);
 
       if (newBhajans != null) {
-        setState(() {
-          bhajans.addAll(newBhajans);
-          isLoaded = true;
-        });
-        return newBhajans;
+        List<Bhajan> uniqueBhajans = [];
+        for (var bhajan in newBhajans) {
+          if (!loadedBhajanIds.contains(bhajan.sequenceNo)) {
+            uniqueBhajans.add(bhajan);
+            loadedBhajanIds.add(bhajan.sequenceNo);
+          }
+        }
+
+        if (uniqueBhajans.isNotEmpty) {
+          setState(() {
+            bhajans.addAll(uniqueBhajans);
+            isLoaded = true;
+          });
+          return uniqueBhajans;
+        } else {
+          // No unique items to add
+          isLoaded = false;
+          return null;
+        }
       } else {
         isLoaded = false;
-        // Handle error, e.g., throw an exception or return a specific error value
         return null;
       }
     } catch (error) {
@@ -192,18 +199,28 @@ class _ContentsPageState extends State<Contentspage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        bhajans![index].titleHindi,
+                                        bhajans![index]
+                                            .sequenceNo
+                                            .toString(), // Convert integer to string
                                         style: const TextStyle(
-                                          fontSize: 17,
+                                          fontSize: 20,
                                           color: Color(0xFF390000),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      SizedBox(height: 8),
+                                      Text(
+                                        bhajans![index].titleHindi,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          color: Color(0xFF390000),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
                                       Text(
                                         bhajans![index].titleEnglish,
                                         style: const TextStyle(
-                                          fontSize: 17,
+                                          fontSize: 15,
                                           color: Color(0xFF390000),
                                         ),
                                       ),

@@ -27,7 +27,7 @@ class RemoteService {
 
   Future<String> findBhajan(int sequenceNumber) async {
     try {
-      for (int page = 1; page <= 10; page++) {
+      for (int page = 1; page <= 20; page++) {
         var uri = Uri.parse('$root/bhajans/?page=$page');
         var response = await _client.get(uri);
 
