@@ -8,6 +8,7 @@ import 'page_manager.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'appConstants.dart';
 import 'search_modal.dart';
+import 'Contentspage.dart';
 
 class MyHomepage extends StatefulWidget {
   final String slug;
@@ -41,6 +42,23 @@ class _MyHomepageState extends State<MyHomepage> {
   void dispose() {
     _pageManager.dispose();
     super.dispose();
+  }
+
+  Future<void> _search(int enteredNumber) async {
+    try {
+      String slug =
+          await RemoteService(http.Client()).findBhajan(enteredNumber);
+      // Navigate to MyHomepage with the found slug
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MyHomepage(slug: slug),
+        ),
+      );
+    } catch (error) {
+      print('Error finding Bhajan: $error');
+      // Handle error, e.g., show an error message
+    }
   }
 
   @override
@@ -102,24 +120,23 @@ class _MyHomepageState extends State<MyHomepage> {
                             style: const TextStyle(
                               fontSize: 20,
                               color: Color(0xFF390000),
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
                             bhajanDetails.titleHindi,
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 20,
                               color: Color(0xFF390000),
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                       subTitle: Text(
-                        bhajanDetails.titleEnglish,
+                        bhajanDetails.composer,
                         style: const TextStyle(
                           fontSize: 16,
                           color: Color(0xFF390000),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -232,34 +249,26 @@ class _MyHomepageState extends State<MyHomepage> {
         selectedItemColor: const Color(0xFFFFEDCB),
         onTap: (int index) {
           if (index == 0) {
+            _pageManager.dispose();
             // Open search modal
             showDialog(
               context: context,
               builder: (BuildContext context) {
                 return SearchModal(
-                  onOkPressed: (int enteredNumber) async {
+                  onOkPressed: (int enteredNumber) {
                     print('Entered number: $enteredNumber');
-                    // Call findBhajan function here
-                    try {
-                      String slug = await RemoteService(http.Client())
-                          .findBhajan(enteredNumber);
-                      // Navigate to MyHomepage with the found slug
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MyHomepage(slug: slug),
-                        ),
-                      );
-                    } catch (error) {
-                      print('Error finding Bhajan: $error');
-                      // Handle error, e.g., show an error message
-                    }
+                    // Call search function to find the Bhajan
+                    _search(enteredNumber);
                   },
                 );
               },
             );
           } else {
-            // Navigate to home page or perform any other action
+            _pageManager.dispose();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const Contentspage()),
+            );
           }
         },
       ),
